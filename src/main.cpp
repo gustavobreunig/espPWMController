@@ -5,62 +5,34 @@
 #include <stdbool.h>
 
 const uint8_t _PWM_MOTOR_PIN = 14;
-const uint8_t _PWM_UP_BUTTON = 4;
-const uint8_t _PWM_DOWN_BUTTON = 5;
 
-//default PWM range its 1024 but let make things easier
-const int _PWM_LEVELS = 11;
-const int _PWM_VALUES[_PWM_LEVELS] =
-{0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
-
-int currentPWMLevel = 0;
-bool buttonPressed = false;
+int _pot_read = 0;
 
 void setup() {
+  pinMode(_PWM_MOTOR_PIN, OUTPUT);
+  analogWrite(_PWM_MOTOR_PIN, 0);
+  
   Serial.begin(115200);
   Serial.setDebugOutput(true);
 
   //don't need wifi anyway
   WiFi.mode(WIFI_OFF);
   
-  pinMode(_PWM_UP_BUTTON, INPUT);
-  pinMode(_PWM_DOWN_BUTTON, INPUT);
-  pinMode(_PWM_MOTOR_PIN, OUTPUT);
   Serial.printf("\nEverything working...\n");
-  
-  analogWrite(_PWM_MOTOR_PIN, _PWM_VALUES[currentPWMLevel]);
 }
 
 void loop() {
-	//if button is not pressed from previous loop
-	if (!buttonPressed)
-	{
-		if (digitalRead(_PWM_UP_BUTTON))
-		{
-			currentPWMLevel++;
-			Serial.println("UP");
-		}
-		
-		if (digitalRead(_PWM_DOWN_BUTTON))
-		{
-			currentPWMLevel--;
-			Serial.println("DOWN");
-		}
-		
-		//level become out of bounds
-		if (currentPWMLevel > _PWM_LEVELS - 1)
-		{
-			currentPWMLevel = _PWM_LEVELS - 1;
-		}
-		else if (currentPWMLevel < 0)
-		{
-			currentPWMLevel = 0;
-		}
-		
-		analogWrite(_PWM_MOTOR_PIN, _PWM_VALUES[currentPWMLevel]);
-	}
+
+	//read potentiometer values from ADC - esp8266 just have one
+	//IMPORTANT: use a voltage divider to drop 0 - 3.3v to 0 - 1v
 	
-	buttonPressed = digitalRead(_PWM_UP_BUTTON) || digitalRead(_PWM_DOWN_BUTTON);
+	//pot_output-------220ohms--------100ohms------GND
+	//                           |
+	//                        ESP ADC
+	//example on schematic.png
 	
+	_pot_read = analogRead(A0); //ranges from 0 to 1023, same as analogWrite PWM
+	analogWrite(_PWM_MOTOR_PIN, _pot_read);
+		
 	delay(50);
 }
