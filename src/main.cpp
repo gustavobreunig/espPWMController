@@ -7,6 +7,7 @@
 const uint8_t _PWM_MOTOR_PIN = 14;
 
 int _pot_read = 0;
+int _count = 0;
 
 void setup() {
   pinMode(_PWM_MOTOR_PIN, OUTPUT);
@@ -31,8 +32,22 @@ void loop() {
 	//                        ESP ADC
 	//example on schematic.png
 	
-	_pot_read = analogRead(A0); //ranges from 0 to 1023, same as analogWrite PWM
-	analogWrite(_PWM_MOTOR_PIN, _pot_read);
+	_pot_read = analogRead(A0); //ranges from 0 to 1023
+	
+	//roundings
+	if (_pot_read < 30) _pot_read = 0;
+	
+	if (_pot_read > 900) _pot_read = 1023;
 		
-	delay(50);
+	analogWrite(_PWM_MOTOR_PIN, _pot_read);
+	
+	//a counter to debug analog read
+	if (_count == 10)
+	{
+		Serial.printf("Analog read: %i \n", _pot_read);
+		_count = 0;
+	}
+		
+	delay(100);
+	_count++;
 }
